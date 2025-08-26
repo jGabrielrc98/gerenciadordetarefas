@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciador de Tarefas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-top: 2em; }
+        label { display: block; margin-bottom: 0.5em; }
+        input[type="text"], input[type="datetime-local"] { width: 100%; padding: 8px; margin-bottom: 1em; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h1>Minhas Tarefas</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>Título</th>
+        <th>Descrição</th>
+        <th>Prioridade</th>
+        <th>Status</th>
+        <th>Prazo</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="task : ${tasks}">
+        <td th:text="${task.titulo}">Título da Tarefa</td>
+        <td th:text="${task.descricao}">Descrição da Tarefa</td>
+        <td th:text="${task.prioridade}">Prioridade</td>
+        <td th:text="${task.status}">Status</td>
+        <td th:text="${task.dataPrazo}">Data Prazo</td>
+    </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h2>Adicionar Nova Tarefa</h2>
+
+<form th:action="@{/tasks/{userId}(userId=${usuarioId})}" th:object="${taskRequest}" method="post">
+    <label for="titulo">Título:</label>
+    <input type="text" id="titulo" th:field="*{titulo}" required>
+
+    <label for="descricao">Descrição:</label>
+    <input type="text" id="descricao" th:field="*{descricao}">
+
+    <label for="dataPrazo">Data de Prazo:</label>
+    <input type="datetime-local" id="dataPrazo" th:field="*{dataPrazo}">
+
+    <button type="submit">Adicionar Tarefa</button>
+</form>
+
+</body>
+</html>
