@@ -2,12 +2,14 @@ package com.gerenciadordetarefas.gerenciadordetarefas.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+@Component
 @Entity
 @Table(name = "tb_user")
 public class User implements Serializable {

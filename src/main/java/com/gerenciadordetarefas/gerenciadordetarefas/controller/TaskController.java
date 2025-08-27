@@ -6,6 +6,7 @@ import com.gerenciadordetarefas.gerenciadordetarefas.model.User;
 import com.gerenciadordetarefas.gerenciadordetarefas.model.enums.Status;
 import com.gerenciadordetarefas.gerenciadordetarefas.service.TaskService;
 import com.gerenciadordetarefas.gerenciadordetarefas.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,14 +19,12 @@ import java.util.UUID;
 @Controller
 @RequestMapping({"/tasks"})
 public class TaskController {
+
+    @Autowired
     private TaskService taskService;
+
+    @Autowired
     private UserService userService;
-
-    public TaskController(TaskService taskService, UserService userService) {
-        this.taskService = taskService;
-        this.userService = userService;
-
-    }
 
     @PostMapping("/{usuarioId}")
     public ResponseEntity<Task> createTask(

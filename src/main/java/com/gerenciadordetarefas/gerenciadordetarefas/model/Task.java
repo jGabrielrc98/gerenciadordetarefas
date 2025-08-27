@@ -2,15 +2,16 @@ package com.gerenciadordetarefas.gerenciadordetarefas.model;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.gerenciadordetarefas.gerenciadordetarefas.dto.TaskRequest;
 import com.gerenciadordetarefas.gerenciadordetarefas.model.enums.Prioridade;
 import com.gerenciadordetarefas.gerenciadordetarefas.model.enums.Status;
 import jakarta.persistence.*;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Component
 @Entity
 @Table(name = "tb_task")
 public class Task implements Serializable {
