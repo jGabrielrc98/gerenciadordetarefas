@@ -1,6 +1,7 @@
 package com.gerenciadordetarefas.gerenciadordetarefas.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.gerenciadordetarefas.gerenciadordetarefas.model.interfaces.Identifiable;
 import jakarta.persistence.*;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Component
 @Entity
 @Table(name = "tb_user")
-public class User implements Serializable {
+public class User implements Identifiable, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -27,13 +28,16 @@ public class User implements Serializable {
     @JsonManagedReference
     private Set<Task> task = new HashSet();
 
-    public UUID getId() {
+    //Implementação da interface Identifiable
+    @Override
+    public  UUID getId(){
         return id;
     }
-
-    public void setId(UUID id) {
+    @Override
+    public void setId(UUID id){
         this.id = id;
     }
+
 
     public String getNome() {
         return nome;

@@ -1,9 +1,9 @@
 package com.gerenciadordetarefas.gerenciadordetarefas.model;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.gerenciadordetarefas.gerenciadordetarefas.model.enums.Prioridade;
 import com.gerenciadordetarefas.gerenciadordetarefas.model.enums.Status;
+import com.gerenciadordetarefas.gerenciadordetarefas.model.interfaces.Identifiable;
 import jakarta.persistence.*;
 import org.springframework.stereotype.Component;
 
@@ -11,10 +11,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Component
 @Entity
 @Table(name = "tb_task")
-public class Task implements Serializable {
+@Component
+public class Task implements Identifiable, Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -25,8 +25,10 @@ public class Task implements Serializable {
     private String titulo;
 
     private String descricao;
+
     @Enumerated(EnumType.STRING)
     private Prioridade prioridade;
+
     @Enumerated(EnumType.STRING)
     private Status status;
 
@@ -38,10 +40,9 @@ public class Task implements Serializable {
     @JsonBackReference
     private User usuario;
 
-
-    //metodo que roda antes de salvar o banco de dados
+    // método que roda antes de salvar no banco de dados
     @PrePersist
-    public void PrePersist() {
+    public void prePersist() {
         this.dataCriacao = LocalDateTime.now();
         if (this.status == null) {
             this.status = Status.PENDENTE;
@@ -49,17 +50,20 @@ public class Task implements Serializable {
         if (this.prioridade == null) {
             this.prioridade = Prioridade.MEDIA;
         }
-
     }
 
+    // Implementação da interface Identifiable
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public void setId(UUID id) {
         this.id = id;
     }
 
+    // getters e setters
     public String getTitulo() {
         return titulo;
     }
