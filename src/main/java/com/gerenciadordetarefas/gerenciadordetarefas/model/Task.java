@@ -35,12 +35,33 @@ public class Task implements Identifiable, Serializable {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataPrazo;
 
+    @Column(name = "data_conclusao")
+    private LocalDateTime dataConclusao;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tb_IdUser")
     @JsonBackReference
     private User usuario;
 
-    // método que roda antes de salvar no banco de dados
+    //Nova FIeld
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "criador-id")
+    private User criador;
+
+
+    public Task() {}
+
+    public Task(String titulo, String descricao, Prioridade prioridade, Status status, LocalDateTime dataCriacao, LocalDateTime dataPrazo, User usuario) {
+        this.titulo = titulo;
+        this.descricao = descricao;
+        this.prioridade = prioridade;
+        this.status = status;
+        this.dataCriacao = dataCriacao;
+        this.dataPrazo = dataPrazo;
+        this.usuario = usuario;
+    }
+
+    //metodo que roda antes de salvar no banco de dados
     @PrePersist
     public void prePersist() {
         this.dataCriacao = LocalDateTime.now();
@@ -118,5 +139,21 @@ public class Task implements Identifiable, Serializable {
 
     public void setUsuario(User usuario) {
         this.usuario = usuario;
+    }
+
+    public User getCriador() {
+        return criador;
+    }
+
+    public void setCriador(User criador) {
+        this.criador = criador;
+    }
+
+    public LocalDateTime getDataConclusao() {
+        return dataConclusao;
+    }
+
+    public void setDataConclusao(LocalDateTime dataConclusao) {
+        this.dataConclusao = dataConclusao;
     }
 }

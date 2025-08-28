@@ -77,6 +77,103 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/create-for-user")
+    @ResponseBody
+    public ResponseEntity<?> criarTarefaParaOutroUsuario(
+            @RequestParam UUID criadorId,
+            @RequestParam String emailResponsavel,
+            @RequestBody Task task) {
+        try {
+            User responsavel = userService.getUserByEmail(emailResponsavel); // aqui troca para usar userService
+            Task novaTarefa = taskService.criarTarefaParaOutroUsuario(
+                    criadorId,
+                    responsavel.getId(),
+                    task
+            );
+            return ResponseEntity.ok(novaTarefa);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/create-for-user/{responsavelId}")
+    @ResponseBody
+    public ResponseEntity<?> criarTarefaParaUsuarioById(
+            @RequestParam UUID criadorId,
+            @PathVariable UUID responsavelId,
+            @RequestBody Task task) {
+        try {
+            Task novaTarefa = taskService.criarTarefaParaOutroUsuario(criadorId, responsavelId, task);
+            return ResponseEntity.ok(novaTarefa);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/created-by-me/{criadorId}")
+    @ResponseBody
+    public ResponseEntity<List<Task>> listarTarefasCriadasPorMim(@PathVariable UUID criadorId) {
+        List<Task> tarefas = taskService.listarTarefasCriadasPorMim(criadorId);
+        return ResponseEntity.ok(tarefas);
+    }
+
+    @GetMapping("/assigned-to-me/{usuarioId}")
+    @ResponseBody
+    public ResponseEntity<List<Task>> listarTarefasAtribuidasParaMim(@PathVariable UUID usuarioId) {
+        List<Task> tarefas = taskService.listarTarefasAtribuidasParaMim(usuarioId);
+        return ResponseEntity.ok(tarefas);
+    }
+
+    @PutMapping("/{taskId}/complete")
+    @ResponseBody
+    public ResponseEntity<?> marcarComoConcluida(
+            @PathVariable UUID taskId,
+            @RequestParam UUID usuarioId) {
+        try {
+            Task tarefaAtualizada = taskService.marcarComoConcluida(usuarioId, taskId);
+            return ResponseEntity.ok(tarefaAtualizada);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/find-user")
+    @ResponseBody
+    public ResponseEntity<?> buscarUsuarioPorEmail(@RequestParam String email) {
+        try {
+            User user = userService.getUserByEmail(email); // usa userService
+            return ResponseEntity.ok(new UserBasicInfo(user.getId(), user.getNome(), user.getEmail()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Usuário não encontrado");
+        }
+    }
+
+    private static class UserBasicInfo {
+        public UUID id;
+        public String nome;
+        public String email;
+
+        public UserBasicInfo(UUID id, String nome, String email) {
+            this.id = id;
+            this.nome = nome;
+            this.email = email;
+        }
+    }
+
+
+    @GetMapping("/all-related/{usuarioId}")
+    @ResponseBody
+    public ResponseEntity<List<Task>> listarTodasTarefasRelacionadas(@PathVariable UUID usuarioId) {
+        List<Task> tarefas = taskService.listarTodasTarefasRelacionadas(usuarioId);
+        return ResponseEntity.ok(tarefas);
+    }
+
+
+
+
+
+
+
     @GetMapping("/user/{usuarioId}")
     public String showTasks(
             @PathVariable UUID usuarioId,
