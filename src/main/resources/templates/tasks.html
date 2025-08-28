@@ -2,59 +2,1146 @@
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador de Tarefas</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1em; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        form { margin-top: 2em; }
-        label { display: block; margin-bottom: 0.5em; }
-        input[type="text"], input[type="datetime-local"] { width: 100%; padding: 8px; margin-bottom: 1em; }
-        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 150px;
+        }
+
+        .tab-button.active {
+            background: #4f46e5;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #e5e7eb;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .task-card.pendente {
+            border-left-color: #f59e0b;
+        }
+
+        .task-card.em_progresso {
+            border-left-color: #3b82f6;
+        }
+
+        .task-card.concluida {
+            border-left-color: #10b981;
+        }
+
+        .task-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .task-description {
+            color: #6b7280;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .task-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .task-status.pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .task-status.em_progresso {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .task-status.concluida {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .task-priority {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .task-priority.alta {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .task-priority.media {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .task-priority.baixa {
+            background: #bbf7d0;
+            color: #166534;
+        }
+
+        .task-date {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .form-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .close:hover {
+            color: #374151;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state img {
+            width: 200px;
+            opacity: 0.5;
+            margin-bottom: 20px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .user-search {
+            position: relative;
+        }
+
+        .user-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .user-suggestion {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-suggestion:hover {
+            background: #f8fafc;
+        }
+
+        .user-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .task-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                margin-bottom: 5px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        .task-creator {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .overdue {
+            border: 2px solid #ef4444;
+            background: #fef2f2;
+        }
+
+        .overdue .task-date {
+            color: #dc2626;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
+<div class="container">
+    <div class="header">
+        <h1>🎯 Gerenciador de Tarefas</h1>
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalTasks">0</span>
+                <span>Total</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="pendingTasks">0</span>
+                <span>Pendentes</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="completedTasks">0</span>
+                <span>Concluídas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="createdByMe">0</span>
+                <span>Criadas por Mim</span>
+            </div>
+        </div>
+    </div>
 
-<h1>Minhas Tarefas</h1>
+    <div class="content">
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('all')">🏠 Todas as Tarefas</button>
+            <button class="tab-button" onclick="showTab('mine')">👤 Minhas Tarefas</button>
+            <button class="tab-button" onclick="showTab('assigned')">📋 Atribuídas a Mim</button>
+            <button class="tab-button" onclick="showTab('created')">✨ Criadas por Mim</button>
+            <button class="tab-button" onclick="showTab('create')">➕ Nova Tarefa</button>
+        </div>
 
-<table>
-    <thead>
-    <tr>
-        <th>Título</th>
-        <th>Descrição</th>
-        <th>Prioridade</th>
-        <th>Status</th>
-        <th>Prazo</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="task : ${tasks}">
-        <td th:text="${task.titulo}">Título da Tarefa</td>
-        <td th:text="${task.descricao}">Descrição da Tarefa</td>
-        <td th:text="${task.prioridade}">Prioridade</td>
-        <td th:text="${task.status}">Status</td>
-        <td th:text="${task.dataPrazo}">Data Prazo</td>
-    </tr>
-    </tbody>
-</table>
+        <!-- Tab: Todas as Tarefas -->
+        <div id="all" class="tab-content active">
+            <div class="filter-section">
+                <div class="search-box">
+                    <input type="text" id="searchTasks" class="form-input" placeholder="🔍 Pesquisar tarefas...">
+                </div>
+                <select id="statusFilter" class="form-select" onchange="applyFilters()">
+                    <option value="">Todos os Status</option>
+                    <option value="PENDENTE">Pendente</option>
+                    <option value="EM_PROGRESSO">Em Progresso</option>
+                    <option value="CONCLUIDA">Concluída</option>
+                </select>
+                <select id="priorityFilter" class="form-select" onchange="applyFilters()">
+                    <option value="">Todas as Prioridades</option>
+                    <option value="ALTA">Alta</option>
+                    <option value="MEDIA">Média</option>
+                    <option value="BAIXA">Baixa</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadAllTasks()">🔄 Atualizar</button>
+            </div>
+            <div id="allTasksContainer" class="task-grid"></div>
+            <div id="loadingAll" class="loading">Carregando tarefas...</div>
+        </div>
 
-<hr>
+        <!-- Tab: Minhas Tarefas -->
+        <div id="mine" class="tab-content">
+            <div class="filter-section">
+                <button class="btn btn-primary" onclick="loadMyTasks()">🔄 Atualizar Minhas Tarefas</button>
+            </div>
+            <div id="myTasksContainer" class="task-grid"></div>
+            <div id="loadingMine" class="loading">Carregando suas tarefas...</div>
+        </div>
 
-<h2>Adicionar Nova Tarefa</h2>
+        <!-- Tab: Atribuídas a Mim -->
+        <div id="assigned" class="tab-content">
+            <div class="filter-section">
+                <button class="btn btn-primary" onclick="loadAssignedTasks()">🔄 Atualizar Tarefas Atribuídas</button>
+            </div>
+            <div id="assignedTasksContainer" class="task-grid"></div>
+            <div id="loadingAssigned" class="loading">Carregando tarefas atribuídas...</div>
+        </div>
 
-<form th:action="@{/tasks/{userId}(userId=${usuarioId})}" th:object="${taskRequest}" method="post">
-    <label for="titulo">Título:</label>
-    <input type="text" id="titulo" th:field="*{titulo}" required>
+        <!-- Tab: Criadas por Mim -->
+        <div id="created" class="tab-content">
+            <div class="filter-section">
+                <button class="btn btn-primary" onclick="loadCreatedTasks()">🔄 Atualizar Tarefas Criadas</button>
+            </div>
+            <div id="createdTasksContainer" class="task-grid"></div>
+            <div id="loadingCreated" class="loading">Carregando tarefas criadas...</div>
+        </div>
 
-    <label for="descricao">Descrição:</label>
-    <input type="text" id="descricao" th:field="*{descricao}">
+        <!-- Tab: Nova Tarefa -->
+        <div id="create" class="tab-content">
+            <div class="form-container">
+                <h2>✨ Criar Nova Tarefa</h2>
+                <form id="taskForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Título *</label>
+                            <input type="text" id="titulo" class="form-input" required placeholder="Digite o título da tarefa">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prioridade</label>
+                            <select id="prioridade" class="form-select">
+                                <option value="BAIXA">Baixa</option>
+                                <option value="MEDIA" selected>Média</option>
+                                <option value="ALTA">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descrição</label>
+                        <textarea id="descricao" class="form-textarea" placeholder="Descreva os detalhes da tarefa"></textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Data de Prazo</label>
+                            <input type="datetime-local" id="dataPrazo" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Atribuir para:</label>
+                            <div class="user-search">
+                                <input type="text" id="assignToEmail" class="form-input" placeholder="Digite o email do usuário (deixe vazio para criar para você mesmo)">
+                                <div id="userSuggestions" class="user-suggestions"></div>
+                            </div>
+                            <small style="color: #6b7280;">Deixe em branco para criar a tarefa para você mesmo</small>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary" style="padding: 15px 40px; font-size: 1.1rem;">
+                            🚀 Criar Tarefa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <label for="dataPrazo">Data de Prazo:</label>
-    <input type="datetime-local" id="dataPrazo" th:field="*{dataPrazo}">
+<!-- Modal para Editar Tarefa -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>✏️ Editar Tarefa</h2>
+        <form id="editTaskForm">
+            <input type="hidden" id="editTaskId">
+            <div class="form-group">
+                <label class="form-label">Título *</label>
+                <input type="text" id="editTitulo" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Descrição</label>
+                <textarea id="editDescricao" class="form-textarea"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data de Prazo</label>
+                <input type="datetime-local" id="editDataPrazo" class="form-input">
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+                <button type="button" class="btn btn-danger" onclick="closeEditModal()" style="margin-left: 10px;">❌ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-    <button type="submit">Adicionar Tarefa</button>
-</form>
+<!-- Toast para notificações -->
+<div id="toast" class="toast"></div>
 
+<!-- Dados do Thymeleaf -->
+<div style="display: none;">
+    <span id="usuarioId" th:text="${usuarioId}">[[${usuarioId}]]</span>
+</div>
+
+<script>
+    let currentUserId = null;
+    let allTasks = [];
+    let selectedUser = null;
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        currentUserId = document.getElementById('usuarioId').textContent.trim();
+        console.log('Usuario ID:', currentUserId);
+
+        loadAllTasks();
+        setupEventListeners();
+    });
+
+    function setupEventListeners() {
+        // Formulário de criar tarefa
+        document.getElementById('taskForm').addEventListener('submit', createTask);
+        document.getElementById('editTaskForm').addEventListener('submit', updateTask);
+
+        // Pesquisa em tempo real
+        document.getElementById('searchTasks').addEventListener('input', applyFilters);
+
+        // Busca de usuários
+        document.getElementById('assignToEmail').addEventListener('input', searchUsers);
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.user-search')) {
+                document.getElementById('userSuggestions').style.display = 'none';
+            }
+        });
+    }
+
+    // Navegação entre abas
+    function showTab(tabName) {
+        // Esconder todas as abas
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        // Desativar todos os botões
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // Ativar aba selecionada
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+
+        // Carregar dados específicos da aba
+        switch(tabName) {
+            case 'all':
+                loadAllTasks();
+                break;
+            case 'mine':
+                loadMyTasks();
+                break;
+            case 'assigned':
+                loadAssignedTasks();
+                break;
+            case 'created':
+                loadCreatedTasks();
+                break;
+        }
+    }
+
+    // Carregar todas as tarefas relacionadas
+    async function loadAllTasks() {
+        showLoading('loadingAll');
+        try {
+            const response = await fetch(`/tasks/all-related/${currentUserId}`);
+            if (response.ok) {
+                allTasks = await response.json();
+                renderTasks(allTasks, 'allTasksContainer');
+                updateStats();
+            } else {
+                showToast('Erro ao carregar tarefas', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        } finally {
+            hideLoading('loadingAll');
+        }
+    }
+
+    // Carregar minhas tarefas (tarefas próprias)
+    async function loadMyTasks() {
+        showLoading('loadingMine');
+        try {
+            const response = await fetch(`/tasks/user/${currentUserId}`);
+            if (response.ok) {
+                const tasks = await response.json();
+                renderTasks(tasks, 'myTasksContainer');
+            } else {
+                showToast('Erro ao carregar suas tarefas', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        } finally {
+            hideLoading('loadingMine');
+        }
+    }
+
+    // Carregar tarefas atribuídas a mim
+    async function loadAssignedTasks() {
+        showLoading('loadingAssigned');
+        try {
+            const response = await fetch(`/tasks/assigned-to-me/${currentUserId}`);
+            if (response.ok) {
+                const tasks = await response.json();
+                renderTasks(tasks, 'assignedTasksContainer');
+            } else {
+                showToast('Erro ao carregar tarefas atribuídas', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        } finally {
+            hideLoading('loadingAssigned');
+        }
+    }
+
+    // Carregar tarefas criadas por mim
+    async function loadCreatedTasks() {
+        showLoading('loadingCreated');
+        try {
+            const response = await fetch(`/tasks/created-by-me/${currentUserId}`);
+            if (response.ok) {
+                const tasks = await response.json();
+                renderTasks(tasks, 'createdTasksContainer');
+            } else {
+                showToast('Erro ao carregar tarefas criadas', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        } finally {
+            hideLoading('loadingCreated');
+        }
+    }
+
+    // Renderizar tarefas
+    function renderTasks(tasks, containerId) {
+        const container = document.getElementById(containerId);
+
+        if (tasks.length === 0) {
+            container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem;">📝</div>
+                        <h3>Nenhuma tarefa encontrada</h3>
+                        <p>Que tal criar sua primeira tarefa?</p>
+                    </div>
+                `;
+            return;
+        }
+
+        container.innerHTML = tasks.map(task => `
+                <div class="task-card ${task.status?.toLowerCase()}" data-task-id="${task.id}">
+                    <div class="task-title">${task.titulo}</div>
+                    <div class="task-description">${task.descricao || 'Sem descrição'}</div>
+                    <div class="task-meta">
+                        <span class="task-status ${task.status?.toLowerCase()}">${getStatusText(task.status)}</span>
+                        <span class="task-priority ${task.prioridade?.toLowerCase()}">${getPriorityText(task.prioridade)}</span>
+                    </div>
+                    ${task.dataPrazo ? `<div class="task-date">📅 Prazo: ${formatDate(task.dataPrazo)}</div>` : ''}
+                    ${task.criador && task.criador.id !== currentUserId ? `<div class="task-creator">👤 Criada por: ${task.criador.nome}</div>` : ''}
+                    <div class="task-actions">
+                        ${task.status !== 'CONCLUIDA' ? `<button class="btn btn-success" onclick="completeTask('${task.id}')">✅ Concluir</button>` : ''}
+                        ${canEditTask(task) ? `<button class="btn btn-warning" onclick="editTask('${task.id}')">✏️ Editar</button>` : ''}
+                        ${canDeleteTask(task) ? `<button class="btn btn-danger" onclick="deleteTask('${task.id}')">🗑️ Excluir</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+    }
+
+    // Verificar se pode editar tarefa
+    function canEditTask(task) {
+        return task.usuario.id === currentUserId || (task.criador && task.criador.id === currentUserId);
+    }
+
+    // Verificar se pode excluir tarefa
+    function canDeleteTask(task) {
+        return task.usuario.id === currentUserId || (task.criador && task.criador.id === currentUserId);
+    }
+
+    // Criar nova tarefa
+    async function createTask(event) {
+        event.preventDefault();
+
+        const taskData = {
+            titulo: document.getElementById('titulo').value,
+            descricao: document.getElementById('descricao').value,
+            dataPrazo: document.getElementById('dataPrazo').value || null
+        };
+
+        try {
+            let response;
+            const assignToEmail = document.getElementById('assignToEmail').value.trim();
+
+            if (assignToEmail && selectedUser) {
+                // Criar para outro usuário
+                response = await fetch(`/tasks/create-for-user/${selectedUser.id}?criadorId=${currentUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(taskData)
+                });
+            } else {
+                // Criar para si mesmo
+                response = await fetch(`/tasks/${currentUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(taskData)
+                });
+            }
+
+            if (response.ok) {
+                showToast('Tarefa criada com sucesso!', 'success');
+                document.getElementById('taskForm').reset();
+                selectedUser = null;
+                document.getElementById('userSuggestions').style.display = 'none';
+                loadAllTasks();
+                showTab('all');
+            } else {
+                const error = await response.text();
+                showToast(`Erro ao criar tarefa: ${error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        }
+    }
+
+    // Buscar usuários por email
+    async function searchUsers() {
+        const email = document.getElementById('assignToEmail').value.trim();
+        const suggestions = document.getElementById('userSuggestions');
+
+        if (email.length < 3) {
+            suggestions.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/tasks/find-user?email=${encodeURIComponent(email)}`);
+            if (response.ok) {
+                const user = await response.json();
+                suggestions.innerHTML = `
+                        <div class="user-suggestion" onclick="selectUser('${user.id}', '${user.nome}', '${user.email}')">
+                            <strong>${user.nome}</strong><br>
+                            <small>${user.email}</small>
+                        </div>
+                    `;
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.innerHTML = `
+                        <div class="user-suggestion" style="color: #ef4444;">
+                            Usuário não encontrado
+                        </div>
+                    `;
+                suggestions.style.display = 'block';
+            }
+        } catch (error) {
+            suggestions.style.display = 'none';
+        }
+    }
+
+    // Selecionar usuário
+    function selectUser(id, nome, email) {
+        selectedUser = { id, nome, email };
+        document.getElementById('assignToEmail').value = `${nome} (${email})`;
+        document.getElementById('userSuggestions').style.display = 'none';
+    }
+
+    // Editar tarefa
+    function editTask(taskId) {
+        const task = allTasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        document.getElementById('editTaskId').value = taskId;
+        document.getElementById('editTitulo').value = task.titulo;
+        document.getElementById('editDescricao').value = task.descricao || '';
+        document.getElementById('editDataPrazo').value = task.dataPrazo ? formatDateForInput(task.dataPrazo) : '';
+
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    // Atualizar tarefa
+    async function updateTask(event) {
+        event.preventDefault();
+
+        const taskId = document.getElementById('editTaskId').value;
+        const taskData = {
+            titulo: document.getElementById('editTitulo').value,
+            descricao: document.getElementById('editDescricao').value,
+            dataPrazo: document.getElementById('editDataPrazo').value || null
+        };
+
+        try {
+            const response = await fetch(`/tasks/${currentUserId}/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(taskData)
+            });
+
+            if (response.ok) {
+                showToast('Tarefa atualizada com sucesso!', 'success');
+                closeEditModal();
+                loadAllTasks();
+            } else {
+                showToast('Erro ao atualizar tarefa', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        }
+    }
+
+    // Marcar como concluída
+    async function completeTask(taskId) {
+        if (!confirm('Deseja realmente marcar esta tarefa como concluída?')) return;
+
+        try {
+            const response = await fetch(`/tasks/${taskId}/complete?usuarioId=${currentUserId}`, {
+                method: 'PUT'
+            });
+
+            if (response.ok) {
+                showToast('Tarefa marcada como concluída!', 'success');
+                loadAllTasks();
+            } else {
+                const error = await response.text();
+                showToast(`Erro: ${error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        }
+    }
+
+    // Excluir tarefa
+    async function deleteTask(taskId) {
+        if (!confirm('Deseja realmente excluir esta tarefa? Esta ação não pode ser desfeita.')) return;
+
+        try {
+            const response = await fetch(`/tasks/${currentUserId}/${taskId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                showToast('Tarefa excluída com sucesso!', 'success');
+                loadAllTasks();
+            } else {
+                showToast('Erro ao excluir tarefa', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro de conexão', 'error');
+        }
+    }
+
+    // Aplicar filtros
+    function applyFilters() {
+        const search = document.getElementById('searchTasks').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const priorityFilter = document.getElementById('priorityFilter').value;
+
+        let filteredTasks = allTasks.filter(task => {
+            const matchesSearch = task.titulo.toLowerCase().includes(search) ||
+                (task.descricao && task.descricao.toLowerCase().includes(search));
+            const matchesStatus = !statusFilter || task.status === statusFilter;
+            const matchesPriority = !priorityFilter || task.prioridade === priorityFilter;
+
+            return matchesSearch && matchesStatus && matchesPriority;
+        });
+
+        renderTasks(filteredTasks, 'allTasksContainer');
+    }
+
+    // Atualizar estatísticas
+    function updateStats() {
+        const total = allTasks.length;
+        const pending = allTasks.filter(t => t.status === 'PENDENTE').length;
+        const completed = allTasks.filter(t => t.status === 'CONCLUIDA').length;
+        const createdByMe = allTasks.filter(t => t.criador && t.criador.id === currentUserId).length;
+
+        document.getElementById('totalTasks').textContent = total;
+        document.getElementById('pendingTasks').textContent = pending;
+        document.getElementById('completedTasks').textContent = completed;
+        document.getElementById('createdByMe').textContent = createdByMe;
+    }
+
+    // Fechar modal de edição
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Mostrar loading
+    function showLoading(elementId) {
+        document.getElementById(elementId).style.display = 'block';
+    }
+
+    // Esconder loading
+    function hideLoading(elementId) {
+        document.getElementById(elementId).style.display = 'none';
+    }
+
+    // Mostrar toast
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Formatações
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleString('pt-BR');
+    }
+
+    function formatDateForInput(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16);
+    }
+
+    function getStatusText(status) {
+        const statusMap = {
+            'PENDENTE': 'Pendente',
+            'EM_PROGRESSO': 'Em Progresso',
+            'CONCLUIDA': 'Concluída'
+        };
+        return statusMap[status] || status;
+    }
+
+    function getPriorityText(priority) {
+        const priorityMap = {
+            'BAIXA': 'Baixa',
+            'MEDIA': 'Média',
+            'ALTA': 'Alta'
+        };
+        return priorityMap[priority] || priority;
+    }
+
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    }
+
+    // Verificar tarefas em atraso e destacar
+    function checkOverdueTasks() {
+        const now = new Date();
+        const taskCards = document.querySelectorAll('.task-card');
+
+        taskCards.forEach(card => {
+            const taskId = card.dataset.taskId;
+            const task = allTasks.find(t => t.id === taskId);
+
+            if (task && task.dataPrazo && task.status !== 'CONCLUIDA') {
+                const dueDate = new Date(task.dataPrazo);
+                if (dueDate < now) {
+                    card.classList.add('overdue');
+                }
+            }
+        });
+    }
+
+    // Verificar tarefas em atraso a cada renderização
+    const originalRenderTasks = renderTasks;
+    renderTasks = function(tasks, containerId) {
+        originalRenderTasks(tasks, containerId);
+        setTimeout(checkOverdueTasks, 100);
+    };
+</script>
 </body>
 </html>
