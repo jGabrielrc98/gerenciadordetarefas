@@ -168,6 +168,13 @@ public class TaskController {
         return ResponseEntity.ok(tarefas);
     }
 
+    @GetMapping
+        @ResponseBody
+    public ResponseEntity<List<Task>> listarTodas() {
+        List<Task> tarefas = taskService.finAll();
+        return ResponseEntity.ok(tarefas);
+    }
+
 
 
 

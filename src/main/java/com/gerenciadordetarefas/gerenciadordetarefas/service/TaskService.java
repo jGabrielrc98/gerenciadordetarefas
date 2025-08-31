@@ -63,6 +63,11 @@ public class TaskService {
         return taskRepository.findByUsuarioId(responsavelId);
     }
 
+    @Transactional
+    public List<Task> finAll(){
+        return taskRepository.findAll();
+    }
+
 
     @Transactional
     public Task marcarComoConcluida(UUID usuarioId, UUID taskId) {

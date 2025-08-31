@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -155,6 +155,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .task-status {
@@ -368,8 +370,25 @@
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 40px 20px;
             color: #6b7280;
+        }
+
+        .loading::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .empty-state {
@@ -378,10 +397,10 @@
             color: #6b7280;
         }
 
-        .empty-state img {
-            width: 200px;
-            opacity: 0.5;
+        .empty-state .icon {
+            font-size: 4rem;
             margin-bottom: 20px;
+            opacity: 0.5;
         }
 
         .toast {
@@ -407,6 +426,15 @@
 
         .toast.error {
             background: #ef4444;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #fecaca;
         }
 
         .user-search {
@@ -469,6 +497,11 @@
                 flex-direction: column;
                 gap: 15px;
             }
+
+            .task-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
 
         .task-creator {
@@ -487,9 +520,24 @@
             color: #dc2626;
             font-weight: 600;
         }
+
+        .debug-info {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
+<!-- Simulação do ID do usuário (normalmente viria do backend) -->
+<div style="display: none;">
+    <span id="usuarioId">550e8400-e29b-41d4-a716-446655440000</span>
+</div>
+
 <div class="container">
     <div class="header">
         <h1>🎯 Gerenciador de Tarefas</h1>
@@ -542,6 +590,12 @@
                 </select>
                 <button class="btn btn-primary" onclick="loadAllTasks()">🔄 Atualizar</button>
             </div>
+
+            <div class="debug-info" id="debugInfo">
+                <strong>Debug Info:</strong><br>
+                <span id="debugText"></span>
+            </div>
+
             <div id="allTasksContainer" class="task-grid"></div>
             <div id="loadingAll" class="loading">Carregando tarefas...</div>
         </div>
@@ -651,24 +705,97 @@
 <!-- Toast para notificações -->
 <div id="toast" class="toast"></div>
 
-<!-- Dados do Thymeleaf -->
-<div style="display: none;">
-    <span id="usuarioId" th:text="${usuarioId}">[[${usuarioId}]]</span>
-</div>
-
 <script>
     let currentUserId = null;
     let allTasks = [];
     let selectedUser = null;
+
+    // Dados de teste (simular backend)
+    const testTasks = [
+        {
+            id: '1',
+            titulo: 'Implementar autenticação',
+            descricao: 'Criar sistema de login e logout para a aplicação',
+            status: 'PENDENTE',
+            prioridade: 'ALTA',
+            dataPrazo: '2024-12-31T23:59:59',
+            dataCriacao: '2024-12-01T10:00:00',
+            usuario: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                nome: 'João Silva',
+                email: 'joao@email.com'
+            },
+            criador: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                nome: 'João Silva',
+                email: 'joao@email.com'
+            }
+        },
+        {
+            id: '2',
+            titulo: 'Configurar banco de dados',
+            descricao: 'Setup inicial do PostgreSQL e configurações de conexão',
+            status: 'EM_PROGRESSO',
+            prioridade: 'MEDIA',
+            dataPrazo: '2024-12-15T17:00:00',
+            dataCriacao: '2024-12-01T14:30:00',
+            usuario: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                nome: 'João Silva',
+                email: 'joao@email.com'
+            },
+            criador: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                nome: 'João Silva',
+                email: 'joao@email.com'
+            }
+        },
+        {
+            id: '3',
+            titulo: 'Criar documentação da API',
+            descricao: 'Documentar todos os endpoints usando Swagger',
+            status: 'CONCLUIDA',
+            prioridade: 'BAIXA',
+            dataPrazo: null,
+            dataCriacao: '2024-11-30T09:15:00',
+            dataConclusao: '2024-12-02T16:20:00',
+            usuario: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                nome: 'João Silva',
+                email: 'joao@email.com'
+            },
+            criador: {
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                nome: 'João Silva',
+                email: 'joao@email.com'
+            }
+        }
+    ];
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
         currentUserId = document.getElementById('usuarioId').textContent.trim();
         console.log('Usuario ID:', currentUserId);
 
-        loadAllTasks();
         setupEventListeners();
+        loadAllTasks();
+
+        // Mostrar informações de debug
+        updateDebugInfo('Sistema inicializado');
     });
+
+    function updateDebugInfo(message) {
+        const debugElement = document.getElementById('debugText');
+        const now = new Date().toLocaleTimeString();
+        debugElement.innerHTML += `[${now}] ${message}<br>`;
+
+        // Mostrar debug por 5 segundos
+        const debugInfo = document.getElementById('debugInfo');
+        debugInfo.style.display = 'block';
+        setTimeout(() => {
+            debugInfo.style.display = 'none';
+        }, 5000);
+    }
 
     function setupEventListeners() {
         // Formulário de criar tarefa
@@ -720,21 +847,111 @@
         }
     }
 
+    // Simulação das chamadas de API (substitua pelas chamadas reais)
+    async function makeApiCall(endpoint, options = {}) {
+        updateDebugInfo(`Tentando chamar: ${endpoint}`);
+
+        // Simular delay de rede
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Simulação das diferentes rotas
+        if (endpoint.includes('/tasks/all-related/')) {
+            return { ok: true, json: async () => testTasks };
+        } else if (endpoint.includes('/tasks/user/')) {
+            return { ok: true, json: async () => testTasks };
+        } else if (endpoint.includes('/tasks/assigned-to-me/')) {
+            return { ok: true, json: async () => testTasks };
+        } else if (endpoint.includes('/tasks/created-by-me/')) {
+            return { ok: true, json: async () => testTasks };
+        } else if (endpoint.includes('/tasks/') && options.method === 'POST') {
+            // Criar nova tarefa
+            const newTask = {
+                id: Date.now().toString(),
+                ...JSON.parse(options.body),
+                status: 'PENDENTE',
+                dataCriacao: new Date().toISOString(),
+                usuario: {
+                    id: currentUserId,
+                    nome: 'João Silva',
+                    email: 'joao@email.com'
+                },
+                criador: {
+                    id: currentUserId,
+                    nome: 'João Silva',
+                    email: 'joao@email.com'
+                }
+            };
+            testTasks.push(newTask);
+            return { ok: true, json: async () => newTask };
+        } else if (endpoint.includes('/find-user')) {
+            // Buscar usuário
+            return {
+                ok: true,
+                json: async () => ({
+                    id: '123',
+                    nome: 'Maria Santos',
+                    email: 'maria@email.com'
+                })
+            };
+        } else if (endpoint.includes('/complete')) {
+            // Marcar como concluída
+            const taskId = endpoint.split('/')[2];
+            const task = testTasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = 'CONCLUIDA';
+                task.dataConclusao = new Date().toISOString();
+            }
+            return { ok: true, json: async () => task };
+        } else if (options.method === 'DELETE') {
+            // Deletar tarefa
+            const taskId = endpoint.split('/').pop();
+            const index = testTasks.findIndex(t => t.id === taskId);
+            if (index > -1) {
+                testTasks.splice(index, 1);
+            }
+            return { ok: true };
+        } else if (options.method === 'PUT') {
+            // Atualizar tarefa
+            const taskId = endpoint.split('/').pop();
+            const task = testTasks.find(t => t.id === taskId);
+            if (task) {
+                const updates = JSON.parse(options.body);
+                Object.assign(task, updates);
+            }
+            return { ok: true, json: async () => task };
+        }
+
+        // Fallback para erro
+        return { ok: false, status: 404, text: async () => 'Endpoint não encontrado' };
+    }
+
     // Carregar todas as tarefas relacionadas
     async function loadAllTasks() {
         showLoading('loadingAll');
+        updateDebugInfo('Carregando todas as tarefas...');
+
         try {
-            const response = await fetch(`/tasks/all-related/${currentUserId}`);
+            const response = await makeApiCall(`/tasks/all-related/${currentUserId}`);
             if (response.ok) {
                 allTasks = await response.json();
+                updateDebugInfo(`${allTasks.length} tarefas carregadas`);
                 renderTasks(allTasks, 'allTasksContainer');
                 updateStats();
             } else {
-                showToast('Erro ao carregar tarefas', 'error');
+                const error = await response.text();
+                showToast(`Erro ao carregar tarefas: ${error}`, 'error');
+                updateDebugInfo(`Erro: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
+
+            // Em caso de erro, carregar dados de teste
+            allTasks = testTasks;
+            renderTasks(allTasks, 'allTasksContainer');
+            updateStats();
+            updateDebugInfo('Carregados dados de teste como fallback');
         } finally {
             hideLoading('loadingAll');
         }
@@ -743,17 +960,26 @@
     // Carregar minhas tarefas (tarefas próprias)
     async function loadMyTasks() {
         showLoading('loadingMine');
+        updateDebugInfo('Carregando minhas tarefas...');
+
         try {
-            const response = await fetch(`/tasks/user/${currentUserId}`);
+            const response = await makeApiCall(`/tasks/user/${currentUserId}`);
             if (response.ok) {
                 const tasks = await response.json();
+                updateDebugInfo(`${tasks.length} tarefas minhas carregadas`);
                 renderTasks(tasks, 'myTasksContainer');
             } else {
-                showToast('Erro ao carregar suas tarefas', 'error');
+                const error = await response.text();
+                showToast(`Erro ao carregar suas tarefas: ${error}`, 'error');
+                updateDebugInfo(`Erro: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
+
+            // Fallback
+            renderTasks(testTasks, 'myTasksContainer');
         } finally {
             hideLoading('loadingMine');
         }
@@ -762,17 +988,26 @@
     // Carregar tarefas atribuídas a mim
     async function loadAssignedTasks() {
         showLoading('loadingAssigned');
+        updateDebugInfo('Carregando tarefas atribuídas...');
+
         try {
-            const response = await fetch(`/tasks/assigned-to-me/${currentUserId}`);
+            const response = await makeApiCall(`/tasks/assigned-to-me/${currentUserId}`);
             if (response.ok) {
                 const tasks = await response.json();
+                updateDebugInfo(`${tasks.length} tarefas atribuídas carregadas`);
                 renderTasks(tasks, 'assignedTasksContainer');
             } else {
-                showToast('Erro ao carregar tarefas atribuídas', 'error');
+                const error = await response.text();
+                showToast(`Erro ao carregar tarefas atribuídas: ${error}`, 'error');
+                updateDebugInfo(`Erro: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
+
+            // Fallback
+            renderTasks(testTasks, 'assignedTasksContainer');
         } finally {
             hideLoading('loadingAssigned');
         }
@@ -781,17 +1016,26 @@
     // Carregar tarefas criadas por mim
     async function loadCreatedTasks() {
         showLoading('loadingCreated');
+        updateDebugInfo('Carregando tarefas criadas por mim...');
+
         try {
-            const response = await fetch(`/tasks/created-by-me/${currentUserId}`);
+            const response = await makeApiCall(`/tasks/created-by-me/${currentUserId}`);
             if (response.ok) {
                 const tasks = await response.json();
+                updateDebugInfo(`${tasks.length} tarefas criadas carregadas`);
                 renderTasks(tasks, 'createdTasksContainer');
             } else {
-                showToast('Erro ao carregar tarefas criadas', 'error');
+                const error = await response.text();
+                showToast(`Erro ao carregar tarefas criadas: ${error}`, 'error');
+                updateDebugInfo(`Erro: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
+
+            // Fallback
+            renderTasks(testTasks, 'createdTasksContainer');
         } finally {
             hideLoading('loadingCreated');
         }
@@ -800,54 +1044,62 @@
     // Renderizar tarefas
     function renderTasks(tasks, containerId) {
         const container = document.getElementById(containerId);
+        updateDebugInfo(`Renderizando ${tasks.length} tarefas em ${containerId}`);
 
-        if (tasks.length === 0) {
+        if (!tasks || tasks.length === 0) {
             container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 4rem;">📝</div>
-                        <h3>Nenhuma tarefa encontrada</h3>
-                        <p>Que tal criar sua primeira tarefa?</p>
-                    </div>
-                `;
+                <div class="empty-state">
+                    <div class="icon">📝</div>
+                    <h3>Nenhuma tarefa encontrada</h3>
+                    <p>Que tal criar sua primeira tarefa?</p>
+                </div>
+            `;
             return;
         }
 
         container.innerHTML = tasks.map(task => `
-                <div class="task-card ${task.status?.toLowerCase()}" data-task-id="${task.id}">
-                    <div class="task-title">${task.titulo}</div>
-                    <div class="task-description">${task.descricao || 'Sem descrição'}</div>
-                    <div class="task-meta">
-                        <span class="task-status ${task.status?.toLowerCase()}">${getStatusText(task.status)}</span>
-                        <span class="task-priority ${task.prioridade?.toLowerCase()}">${getPriorityText(task.prioridade)}</span>
-                    </div>
-                    ${task.dataPrazo ? `<div class="task-date">📅 Prazo: ${formatDate(task.dataPrazo)}</div>` : ''}
-                    ${task.criador && task.criador.id !== currentUserId ? `<div class="task-creator">👤 Criada por: ${task.criador.nome}</div>` : ''}
-                    <div class="task-actions">
-                        ${task.status !== 'CONCLUIDA' ? `<button class="btn btn-success" onclick="completeTask('${task.id}')">✅ Concluir</button>` : ''}
-                        ${canEditTask(task) ? `<button class="btn btn-warning" onclick="editTask('${task.id}')">✏️ Editar</button>` : ''}
-                        ${canDeleteTask(task) ? `<button class="btn btn-danger" onclick="deleteTask('${task.id}')">🗑️ Excluir</button>` : ''}
-                    </div>
+            <div class="task-card ${task.status?.toLowerCase()}" data-task-id="${task.id}">
+                <div class="task-title">${task.titulo || 'Sem título'}</div>
+                <div class="task-description">${task.descricao || 'Sem descrição'}</div>
+                <div class="task-meta">
+                    <span class="task-status ${task.status?.toLowerCase()}">${getStatusText(task.status)}</span>
+                    <span class="task-priority ${task.prioridade?.toLowerCase()}">${getPriorityText(task.prioridade)}</span>
                 </div>
-            `).join('');
+                ${task.dataPrazo ? `<div class="task-date">📅 Prazo: ${formatDate(task.dataPrazo)}</div>` : ''}
+                ${task.criador && task.criador.id !== currentUserId ? `<div class="task-creator">👤 Criada por: ${task.criador.nome}</div>` : ''}
+                <div class="task-actions">
+                    ${task.status !== 'CONCLUIDA' ? `<button class="btn btn-success" onclick="completeTask('${task.id}')">✅ Concluir</button>` : ''}
+                    ${canEditTask(task) ? `<button class="btn btn-warning" onclick="editTask('${task.id}')">✏️ Editar</button>` : ''}
+                    ${canDeleteTask(task) ? `<button class="btn btn-danger" onclick="deleteTask('${task.id}')">🗑️ Excluir</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+
+        // Verificar tarefas em atraso após renderizar
+        setTimeout(checkOverdueTasks, 100);
     }
 
     // Verificar se pode editar tarefa
     function canEditTask(task) {
+        if (!task.usuario) return false;
         return task.usuario.id === currentUserId || (task.criador && task.criador.id === currentUserId);
     }
 
     // Verificar se pode excluir tarefa
     function canDeleteTask(task) {
+        if (!task.usuario) return false;
         return task.usuario.id === currentUserId || (task.criador && task.criador.id === currentUserId);
     }
 
     // Criar nova tarefa
     async function createTask(event) {
         event.preventDefault();
+        updateDebugInfo('Tentando criar nova tarefa...');
 
         const taskData = {
             titulo: document.getElementById('titulo').value,
             descricao: document.getElementById('descricao').value,
+            prioridade: document.getElementById('prioridade').value,
             dataPrazo: document.getElementById('dataPrazo').value || null
         };
 
@@ -857,7 +1109,8 @@
 
             if (assignToEmail && selectedUser) {
                 // Criar para outro usuário
-                response = await fetch(`/tasks/create-for-user/${selectedUser.id}?criadorId=${currentUserId}`, {
+                updateDebugInfo(`Criando tarefa para usuário: ${selectedUser.email}`);
+                response = await makeApiCall(`/tasks/create-for-user/${selectedUser.id}?criadorId=${currentUserId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -866,7 +1119,8 @@
                 });
             } else {
                 // Criar para si mesmo
-                response = await fetch(`/tasks/${currentUserId}`, {
+                updateDebugInfo('Criando tarefa para mim mesmo');
+                response = await makeApiCall(`/tasks/${currentUserId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -877,6 +1131,7 @@
 
             if (response.ok) {
                 showToast('Tarefa criada com sucesso!', 'success');
+                updateDebugInfo('Tarefa criada com sucesso');
                 document.getElementById('taskForm').reset();
                 selectedUser = null;
                 document.getElementById('userSuggestions').style.display = 'none';
@@ -885,10 +1140,12 @@
             } else {
                 const error = await response.text();
                 showToast(`Erro ao criar tarefa: ${error}`, 'error');
+                updateDebugInfo(`Erro ao criar: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
         }
     }
 
@@ -903,22 +1160,22 @@
         }
 
         try {
-            const response = await fetch(`/tasks/find-user?email=${encodeURIComponent(email)}`);
+            const response = await makeApiCall(`/tasks/find-user?email=${encodeURIComponent(email)}`);
             if (response.ok) {
                 const user = await response.json();
                 suggestions.innerHTML = `
-                        <div class="user-suggestion" onclick="selectUser('${user.id}', '${user.nome}', '${user.email}')">
-                            <strong>${user.nome}</strong><br>
-                            <small>${user.email}</small>
-                        </div>
-                    `;
+                    <div class="user-suggestion" onclick="selectUser('${user.id}', '${user.nome}', '${user.email}')">
+                        <strong>${user.nome}</strong><br>
+                        <small>${user.email}</small>
+                    </div>
+                `;
                 suggestions.style.display = 'block';
             } else {
                 suggestions.innerHTML = `
-                        <div class="user-suggestion" style="color: #ef4444;">
-                            Usuário não encontrado
-                        </div>
-                    `;
+                    <div class="user-suggestion" style="color: #ef4444;">
+                        Usuário não encontrado
+                    </div>
+                `;
                 suggestions.style.display = 'block';
             }
         } catch (error) {
@@ -931,12 +1188,18 @@
         selectedUser = { id, nome, email };
         document.getElementById('assignToEmail').value = `${nome} (${email})`;
         document.getElementById('userSuggestions').style.display = 'none';
+        updateDebugInfo(`Usuário selecionado: ${nome}`);
     }
 
     // Editar tarefa
     function editTask(taskId) {
         const task = allTasks.find(t => t.id === taskId);
-        if (!task) return;
+        if (!task) {
+            showToast('Tarefa não encontrada', 'error');
+            return;
+        }
+
+        updateDebugInfo(`Editando tarefa: ${task.titulo}`);
 
         document.getElementById('editTaskId').value = taskId;
         document.getElementById('editTitulo').value = task.titulo;
@@ -949,6 +1212,7 @@
     // Atualizar tarefa
     async function updateTask(event) {
         event.preventDefault();
+        updateDebugInfo('Tentando atualizar tarefa...');
 
         const taskId = document.getElementById('editTaskId').value;
         const taskData = {
@@ -958,7 +1222,7 @@
         };
 
         try {
-            const response = await fetch(`/tasks/${currentUserId}/${taskId}`, {
+            const response = await makeApiCall(`/tasks/${currentUserId}/${taskId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -968,14 +1232,18 @@
 
             if (response.ok) {
                 showToast('Tarefa atualizada com sucesso!', 'success');
+                updateDebugInfo('Tarefa atualizada com sucesso');
                 closeEditModal();
                 loadAllTasks();
             } else {
-                showToast('Erro ao atualizar tarefa', 'error');
+                const error = await response.text();
+                showToast(`Erro ao atualizar tarefa: ${error}`, 'error');
+                updateDebugInfo(`Erro ao atualizar: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
         }
     }
 
@@ -983,21 +1251,26 @@
     async function completeTask(taskId) {
         if (!confirm('Deseja realmente marcar esta tarefa como concluída?')) return;
 
+        updateDebugInfo(`Marcando tarefa ${taskId} como concluída...`);
+
         try {
-            const response = await fetch(`/tasks/${taskId}/complete?usuarioId=${currentUserId}`, {
+            const response = await makeApiCall(`/tasks/${taskId}/complete?usuarioId=${currentUserId}`, {
                 method: 'PUT'
             });
 
             if (response.ok) {
                 showToast('Tarefa marcada como concluída!', 'success');
+                updateDebugInfo('Tarefa marcada como concluída');
                 loadAllTasks();
             } else {
                 const error = await response.text();
                 showToast(`Erro: ${error}`, 'error');
+                updateDebugInfo(`Erro ao concluir: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
         }
     }
 
@@ -1005,20 +1278,26 @@
     async function deleteTask(taskId) {
         if (!confirm('Deseja realmente excluir esta tarefa? Esta ação não pode ser desfeita.')) return;
 
+        updateDebugInfo(`Excluindo tarefa ${taskId}...`);
+
         try {
-            const response = await fetch(`/tasks/${currentUserId}/${taskId}`, {
+            const response = await makeApiCall(`/tasks/${currentUserId}/${taskId}`, {
                 method: 'DELETE'
             });
 
             if (response.ok) {
                 showToast('Tarefa excluída com sucesso!', 'success');
+                updateDebugInfo('Tarefa excluída com sucesso');
                 loadAllTasks();
             } else {
-                showToast('Erro ao excluir tarefa', 'error');
+                const error = await response.text();
+                showToast(`Erro ao excluir tarefa: ${error}`, 'error');
+                updateDebugInfo(`Erro ao excluir: ${error}`);
             }
         } catch (error) {
             console.error('Erro:', error);
             showToast('Erro de conexão', 'error');
+            updateDebugInfo(`Erro de conexão: ${error.message}`);
         }
     }
 
@@ -1037,6 +1316,7 @@
             return matchesSearch && matchesStatus && matchesPriority;
         });
 
+        updateDebugInfo(`Aplicando filtros: ${filteredTasks.length} tarefas encontradas`);
         renderTasks(filteredTasks, 'allTasksContainer');
     }
 
@@ -1051,6 +1331,8 @@
         document.getElementById('pendingTasks').textContent = pending;
         document.getElementById('completedTasks').textContent = completed;
         document.getElementById('createdByMe').textContent = createdByMe;
+
+        updateDebugInfo(`Stats atualizadas: ${total} total, ${pending} pendentes, ${completed} concluídas`);
     }
 
     // Fechar modal de edição
@@ -1060,12 +1342,18 @@
 
     // Mostrar loading
     function showLoading(elementId) {
-        document.getElementById(elementId).style.display = 'block';
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = 'block';
+        }
     }
 
     // Esconder loading
     function hideLoading(elementId) {
-        document.getElementById(elementId).style.display = 'none';
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = 'none';
+        }
     }
 
     // Mostrar toast
@@ -1098,7 +1386,7 @@
             'EM_PROGRESSO': 'Em Progresso',
             'CONCLUIDA': 'Concluída'
         };
-        return statusMap[status] || status;
+        return statusMap[status] || status || 'Pendente';
     }
 
     function getPriorityText(priority) {
@@ -1107,15 +1395,7 @@
             'MEDIA': 'Média',
             'ALTA': 'Alta'
         };
-        return priorityMap[priority] || priority;
-    }
-
-    // Fechar modal ao clicar fora
-    window.onclick = function(event) {
-        const modal = document.getElementById('editModal');
-        if (event.target === modal) {
-            closeEditModal();
-        }
+        return priorityMap[priority] || priority || 'Média';
     }
 
     // Verificar tarefas em atraso e destacar
@@ -1136,12 +1416,13 @@
         });
     }
 
-    // Verificar tarefas em atraso a cada renderização
-    const originalRenderTasks = renderTasks;
-    renderTasks = function(tasks, containerId) {
-        originalRenderTasks(tasks, containerId);
-        setTimeout(checkOverdueTasks, 100);
-    };
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    }
 </script>
 </body>
 </html>
